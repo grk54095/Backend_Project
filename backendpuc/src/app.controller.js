@@ -1,62 +1,65 @@
 import { Controller, Dependencies, Get, Bind, Query, Param, Post, Body, } from '@nestjs/common';
+import { Acervo } from "./app.service";
+import { Statics } from "./statics";
 
 @Controller('library')
+@Dependencies(Acervo, Statics)
 export class AppController {
   #acervo;
-  constructor() {
-    this.#acervo = []
-    this.#acervo[0] = { title: "JavaScrip Introduction", author: "Will" };
-    this.#acervo[1] = { title: "AI domanince", author: "Bryan" };
-    this.#acervo[2] = { title: "English History", author: "Willson" };
-    this.#acervo[3] = { title: "World Economy", author: "Willson" };
-    this.#acervo[4] = { title: "America in one word", author: "Weber" };
-    this.#acervo[5] = { title: "JavaScript developers", author: "Will" };
-
-
+  #statics;
+  constructor(acervo, statics) {
+    this.#acervo = acervo;
+    this.#statics = statics;
   }
   @Get()
   getHello() {
     return 'Hello World, thats our new library!';
   }
   @Get('books')
-  getBookList() {
-    return this.#acervo;
+  getBook() {
+    return this.#acervo.getBooksList();
   }
 
   @Get('author')
-  getBookAuthor() {
-    return [...new Set(this.#acervo.map(name => name.author))];
+  getAuthor() {
+    return Array.from(this.#acervo.getAuthors());
 
   }
 
   @Get('title')
-  getBookTitle() {
-    return this.#acervo.map(workName => workName.title)
+  getTitle() {
+    return this.#acervo.getTitles()
   }
 
   @Get('authorbook')
   @Bind(Query())
   getauthorbook(query) {
-    console.log(query.author);
-    var resp = [];
-    for (const book of this.#acervo.values()) {
-      if (book.author === query.author) {
-        resp.push(book.title)
-      }
-    }
-    return resp;
+
+    return this.#acervo.getBooksAuthor(query.author);
   }
 
   @Get('book/title/:title')
   @Bind(Param())
   getbookTitle(param) {
-    var resp = [];
-    for (const book of this.#acervo.values()) {
-      if (book.title === param.title) {
-        resp.push(book);
-      }
-    }
-    return resp;
+    return this.#acervo.getBooksTitle(param.title);
+  }
+
+  @Get('numberofTitles/author/:author')
+  @Bind(Param())
+  getnumberoftitles(params) {
+    return this.#statics.authorWorks(params.author);
+  }
+
+  @Get('mostRecentWork/year/:year')
+  @Bind(Param())
+  getnumberofmostrecentwork(params) {
+    return this.#statics.recentWorks(params.author);
+  }
+
+  @Get('numberofWorks/author/:author/year/:year')
+  @Bind(Param())
+  getNumberofWorksFromAuthor(params) {
+    return this.#statics.numberPublicationYearAuthor(params.author, params.year);
   }
 
   @Post("teste")
